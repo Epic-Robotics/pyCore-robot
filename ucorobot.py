@@ -25,7 +25,7 @@ calib.add_argument("-wi", "--width", type=int, help="Width of camera resolution 
 calib.add_argument("-he", "--height", type=int, help="Height of camera resolution (default=480)", default=480)
 
 pose = subparsers.add_parser('pose', help = 'Get positional parameters')
-pose.add_argument("-g", "--gray", help="OpenCV gray image.", required=False)
+pose.add_argument("-g", "--frame", help="OpenCV gray image.", required=False)
 pose.add_argument("-m", "--mode", type=int, help="Pose parameters mode. 0 --> Pixel based pose. 1 --> Real ArUco based mode.", default=0, required=False)
 pose.add_argument("-mt", "--mtx", help="OpenCV camera matrix.", required=False)
 pose.add_argument("-di", "--dist", help="OpenCV distorsion matrix.", required=False)
@@ -33,13 +33,11 @@ pose.add_argument("-r", "--robot_IDS", help="Robot matrix of IDS.", required=Fal
 pose.add_argument("-s", "--size_in", type=int, help="Initial number of units")
 
 draw = subparsers.add_parser('draw', help = 'Draw real-time robots')
-draw.add_argument("-f", "--frame", help="Camera image frame.")
 draw.add_argument("-rb", "--robot_POSE", help="Robot matrix of POSES.")
 draw.add_argument("-r", "--robot_IDS", help="Robot matrix of IDS.")
 draw.add_argument("-m", "--mode", type=int, help="Style of draw mode", default=0)
 
 ctrdiff = subparsers.add_parser('ctrdiff', help = "PyCore_Robot default differential robot controllers")
-ctrdiff.add_argument("-f", "--frame", help="Camera image frame.")
 ctrdiff.add_argument("-rb", "--robot_POSE", help="Robot matrix of POSE.")
 ctrdiff.add_argument("-ri", "--robot_IDS", help="Robot ID")
 ctrdiff.add_argument("-rg", "--robot_GOAL", help="Robot goal coordinates.")
@@ -198,7 +196,8 @@ def assign():
     for i in range(100):
     
         ret, frame = cap.read()
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), (width, height))
+        frame = cv2.resize(frame, (width, height))
         corners, ids, rejected = detector.detectMarkers(gray)
     
         if np.all(ids != None):
@@ -323,7 +322,7 @@ def initialize():
     
     return robot_IDS, size_in
     
-def get_pose(gray = pose_args.gray,
+def get_pose(frame = pose_args.frame,
              mode = pose_args.mode,
              mtx = pose_args.mtx,
              dist = pose_args.dist,
@@ -338,10 +337,16 @@ def get_pose(gray = pose_args.gray,
     global aruco_dict
     global parameters
     global marker_size
+    global width
+    global height
+
+    frame = cv2.resize(frame, (width, height))
+    globals()['frame'] = frame
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     detector = aruco.ArucoDetector(aruco_dict, parameters)
 
-    corners, ids, rejected = detector.detectMarkers(gray)
+    corners, ids, rejected = detector.detectMarkers(frame)
     
     if np.all(ids != None):
         
@@ -415,13 +420,13 @@ def get_pose(gray = pose_args.gray,
             print("Pose parameter mode not valid")
             sys.exit(0)
 
-def draw_robots(frame = draw_args.frame,
-                robot_POSE = draw_args.robot_POSE,
+def draw_robots(robot_POSE = draw_args.robot_POSE,
                 robot_IDS = draw_args.robot_IDS,
                 mode = draw_args.mode):
     
     global width
     global height
+    global frame
     
     font = cv2.FONT_HERSHEY_DUPLEX
     size_in = len(robot_IDS)
@@ -576,6 +581,8 @@ def draw_robots(frame = draw_args.frame,
         else:
             print("Drawn parameter mode not valid")
             sys.exit(0)
+    globals()['frame'] = frame
+    cv2.imshow('frame', frame)
             
 def MIMC_VADOC_single(robot_POSE, robot_GOAL, ctr_params):
     
@@ -692,7 +699,7 @@ def MIMC_VADOC_single(robot_POSE, robot_GOAL, ctr_params):
     #--------------------------------------------------------------------------
     
     return wl, wr, F
-
+        
 def MIMC_VADOC_multiple(robot_POSE, robot_IDS, robot_GOAL, ctr_params):
     
     global wr
@@ -769,164 +776,8 @@ def MIMC_VADOC_multiple(robot_POSE, robot_IDS, robot_GOAL, ctr_params):
         #-- VADOC MODEL
         
         #-- Angle to objetive direction compensation
-        F_ang = math.acos((x_d - x)/d_m)
-        if y_d >= y:
-            F_ang = -abs(F_ang)
-        else:
-            F_ang = abs(F_ang)     
-        ang_F = F_ang      
-        
-        #-- Current angle vector
-        x_dist = np.cos(ang)
-        y_dist = np.sin(ang)
-        
-        #-- Objetive vector
-        x_dist_F = np.cos(ang_F)
-        y_dist_F = np.sin(ang_F)
-        
-        #-- Final desired vector
-        x_des = np.cos(ang_d)
-        y_des = np.sin(ang_d)
-        
-        #-- Virtual angle distance toward objetive
-        F_dist = ((x_dist_F - x_dist)**2 + (y_dist_F - y_dist)**2)**(1/2)
-        
-        #-- Virtual angle distance toward final desired angle
-        F_dist_des = ((x_des - x_dist)**2 + (y_des - y_dist)**2)**(1/2)
-        
-        #-- Angle direction parameters
-        wi_h = ang - ang_F
-        wi_ang = ang - ang_d
-        
-        #-- Angular velocities singularities compensations
-        if d_m <= d0:
-            
-            #-- Final angle based singularities compensations
-            if (ang>np.radians(90) and ang_d<np.radians(-90)) or (ang<np.radians(-90) and ang_d>np.radians(90)):
-                if wi_ang >= 0:
-                    wi = -kw*F_dist_des
-                else:
-                    wi = kw*F_dist_des
-            else:
-                if wi_ang >= 0:
-                    wi = kw*F_dist_des
-                else:
-                    wi = -kw*F_dist_des
-        else:
-            
-            #-- Objetive angle based singularities compensations
-            if (ang>np.radians(90) and ang_F<np.radians(-90)) or (ang<np.radians(-90) and ang_F>np.radians(90)):
-                if wi_h >= 0:
-                    wi = -kw*F_dist
-                else:
-                    wi = kw*F_dist
-            else:
-                if wi_h >= 0:
-                    wi = kw*F_dist
-                else:
-                    wi = -kw*F_dist
-        
-        #-- Angular velocities singularities compensations
-        if d_m <= d0:
-            wi = kw*F_dist_des*np.sign(ang - ang_d)
-        else:
-            wi = kw*F_dist*np.sign(ang - ang_F)
-        
-        #-- Tranform base velocity parameters to dynamical actuator signals
-        wl[k] = float(np.squeeze((ui + ((wi*l)/2))*(1/(r))))
-        wr[k] = float(np.squeeze((ui - ((wi*l)/2))*(1/(r))))
-            
-        #----------------------------------------------------------------------
-        
-def MIMC_VADOC_multiple_2(robot_POSE, robot_IDS, robot_GOAL, ctr_params):
-    
-    global wr
-    global wl
-    global F
-    
-    size_in = len(robot_IDS)
-    
-    #-- MIMC-VADOC CONTROLLER--------------------------------------------------
-    
-    #-- Controller input parameters
-    r = ctr_params[0]
-    l = ctr_params[1]
-    ks = ctr_params[2]
-    d0 = ctr_params[3]
-    kw = ctr_params[4]
-    U_max = ctr_params[5]
-    kr = ctr_params[6]
-    L0 = ctr_params[7]
-    
-    for k in range(size_in):
-        
-        #-- MIMC MODEL
-        
-        x = robot_POSE[k][0]
-        y = robot_POSE[k][1]
-        ang = math.radians(robot_POSE[k][2])
-        x_d = robot_GOAL[k][0]
-        y_d = robot_GOAL[k][1]
-        ang_d = math.radians(robot_GOAL[k][2])
-    
-        #-- Distance toward objetive
-        d_m = ((x_d - x)**2 + (y_d - y)**2)**(1/2)
-        
-        #-- Attraction field pre-compensation
-        if d_m < d0 :
-            d0 = 30
-        else:
-            d0 = ctr_params[3]
-            
-        #-- Attraction field calculations
-        if d_m <= d0:
-            Fa = [0, 0]
-        else:
-            Ks = ks/((d_m)**(1/2))
-            Fa = [Ks*(d_m - d0)*((x_d - x)/d_m), -Ks*(d_m - d0)*((y_d - y)/d_m)]
-        
-        #-- Repulsion field calculations
-        Fr = [0, 0]
-        R_POSE = np.delete(robot_POSE, k, axis=0)
-        for i in range(size_in - 1):
-            Rx_d = R_POSE[i][0]
-            Ry_d = R_POSE[i][1]
-            L_obs = (((Rx_d-x)**2)*1.2+(Ry_d-y)**2)**(1/2)
-            if L_obs <= L0:
-                rep = [((kr/(L_obs**3))*((1/L_obs)-(1/L0))*(Rx_d-x)), -((kr/(L_obs**3))*((1/L_obs)-(1/L0))*(Ry_d-y))]
-            else:
-                rep = [0, 0]      
-            Fr = Fr + rep
-
-        #-- Potential field vector
-        F[k] = [Fa[0]-Fr[0], Fa[1]-Fr[1]]
-        
-        #-- Linear velocities calculation
-        o = np.array([math.cos(ang), math.sin(ang)])
-        F_f = np.array([[F[k][0]/(1+(F[k][0]**2+F[k][1]**2)**(1/2))], [F[k][1]/(1+(F[k][0]**2+F[k][1]**2)**(1/2))]])
-        
-        #-- Final maximum based linear velocity calculation
-        if o @ F_f >= 0:
-            ui = (o @ F_f)*U_max
-        else:
-            ui = 0
-        
-        #-- VADOC MODEL
-        
-        #-- Angle to objetive direction compensation
-        #ang_F = math.atan((y_d - y)/(x_d - x))
         ang_F = math.atan2((-(y_d - y)),(x_d - x))
-        print(ang)
-        print(ang_F)
-        #F_ang = math.acos((x_d - x)/d_m)
-        
-        '''
-        if y_d >= y:
-            F_ang = -abs(F_ang)
-        else:
-            F_ang = abs(F_ang)     
-        ang_F = F_ang
-        '''
+
         #-- Current angle vector
         x_dist = np.cos(ang)
         y_dist = np.sin(ang)
@@ -945,35 +796,6 @@ def MIMC_VADOC_multiple_2(robot_POSE, robot_IDS, robot_GOAL, ctr_params):
         #-- Virtual angle distance toward final desired angle
         F_dist_des = ((x_des - x_dist)**2 + (y_des - y_dist)**2)**(1/2)
         
-        '''
-        #-- Angular velocities singularities compensations
-        if d_m <= d0:
-            
-            #-- Final angle based singularities compensations
-            if (ang>np.radians(90) and ang_d<np.radians(-90)) or (ang<np.radians(-90) and ang_d>np.radians(90)):
-                if wi_ang >= 0:
-                    wi = -kw*F_dist_des
-                else:
-                    wi = kw*F_dist_des
-            else:
-                if wi_ang >= 0:
-                    wi = kw*F_dist_des
-                else:
-                    wi = -kw*F_dist_des
-        else:
-            
-            #-- Objetive angle based singularities compensations
-            if (ang>np.radians(90) and ang_F<np.radians(-90)) or (ang<np.radians(-90) and ang_F>np.radians(90)):
-                if wi_h >= 0:
-                    wi = -kw*F_dist
-                else:
-                    wi = kw*F_dist
-            else:
-                if wi_h >= 0:
-                    wi = kw*F_dist
-                else:
-                    wi = -kw*F_dist
-        '''
         #-- Angular velocities singularities compensations
         if d_m <= d0:
             wi = kw*F_dist_des*np.sign(ang - ang_d)
@@ -983,8 +805,6 @@ def MIMC_VADOC_multiple_2(robot_POSE, robot_IDS, robot_GOAL, ctr_params):
             wi = kw*F_dist*np.sign(ang - ang_F)
             if (ang_F>math.pi/2 and ang<-math.pi/2) or (ang>math.pi/2 and ang_F<-math.pi/2):
                 wi = -wi
-            
-        
         
         #-- Tranform base velocity parameters to dynamical actuator signals
         wl[k] = float(np.squeeze((ui + ((wi*l)/2))*(1/(r))))
@@ -992,8 +812,7 @@ def MIMC_VADOC_multiple_2(robot_POSE, robot_IDS, robot_GOAL, ctr_params):
             
         #----------------------------------------------------------------------
     
-def trdiff_control_single(frame = ctrdiff_args.frame,
-                          robot_POSE = ctrdiff_args.robot_POSE,
+def trdiff_control_single(robot_POSE = ctrdiff_args.robot_POSE,
                           robot_IDS = ctrdiff_args.robot_IDS,
                           robot_GOAL = ctrdiff_args.robot_GOAL,
                           ctr_mode = ctrdiff_args.ctr_mode,
@@ -1001,6 +820,7 @@ def trdiff_control_single(frame = ctrdiff_args.frame,
     
     global width
     global height
+    global frame
     
     font = cv2.FONT_HERSHEY_DUPLEX
     print(len(np.squeeze(robot_POSE)))
@@ -1072,6 +892,7 @@ def trdiff_control_single(frame = ctrdiff_args.frame,
                 cv2.rectangle(frame, (15, height-15), (300, height-45), (255, 255, 255), -1)
                 cv2.rectangle(frame, (20, height-20), (60, height-40), color, -1)
                 cv2.putText(frame, ("CONTROLLER PARAMETERS"), (70, height-25), font, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+                cv2.imshow('frame', frame)
                 
                 return [wr, wl]
             
@@ -1091,8 +912,7 @@ def trdiff_control_single(frame = ctrdiff_args.frame,
         print("Single controllers for differential robots only support pixel based pose estimation")
         sys.exit(0)
         
-def trdiff_control_multiple(frame = ctrdiff_args.frame,
-                            robot_POSE = ctrdiff_args.robot_POSE,
+def trdiff_control_multiple(robot_POSE = ctrdiff_args.robot_POSE,
                             robot_IDS = ctrdiff_args.robot_IDS,
                             robot_GOAL = ctrdiff_args.robot_GOAL,
                             ctr_mode = ctrdiff_args.ctr_mode,
@@ -1104,6 +924,7 @@ def trdiff_control_multiple(frame = ctrdiff_args.frame,
     global width
     global height
     global ang_vel
+    global frame
     
     font = cv2.FONT_HERSHEY_DUPLEX
     robot_POSE = np.squeeze(robot_POSE)
@@ -1114,7 +935,7 @@ def trdiff_control_multiple(frame = ctrdiff_args.frame,
         
         if str(ctr_mode) == "MIMC-VADOC":
         
-            MIMC_VADOC_multiple_2(robot_POSE, robot_IDS, robot_GOAL, ctr_params)
+            MIMC_VADOC_multiple(robot_POSE, robot_IDS, robot_GOAL, ctr_params)
             
             for k in range(size_in):
                 
@@ -1177,6 +998,8 @@ def trdiff_control_multiple(frame = ctrdiff_args.frame,
                 cv2.rectangle(frame, (15, height-15), (300, height-45), (255, 255, 255), -1)
                 cv2.rectangle(frame, (20, height-20), (60, height-40), color, -1)
                 cv2.putText(frame, ("CONTROLLER PARAMETERS"), (70, height-25), font, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+
+                cv2.imshow('frame', frame)
                 
             return ang_vel
         
@@ -1187,7 +1010,7 @@ def trdiff_control_multiple(frame = ctrdiff_args.frame,
         else:
             print("Non-existent controller mode command")
             sys.exit(0)
-        
+
     else:
         print("Multiple controllers for differential robots only support pixel based pose estimation")
         sys.exit(0)
@@ -1280,7 +1103,6 @@ def transmission_UDP(mode = UDP_transmission_args.mode,
             
             try:
                 sock.sendto(bytes(UDP_payload[k], "utf-8"), UDP_IPS[k])
-                #print("Message sent to robot IP: "+str(UDP_IPS[k]))
             except:
                 pass
      
@@ -1310,7 +1132,6 @@ def transmission_UDP(mode = UDP_transmission_args.mode,
                 
                 try:
                     sock.sendto(bytes(UDP_payload[k], "utf-8"), UDP_IPS[k][0])
-                    print("Message sent to robot IP: "+str(UDP_IPS[k]))
                 except:
                     pass
         else:
