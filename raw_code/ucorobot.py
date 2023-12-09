@@ -1253,6 +1253,10 @@ def initialize_UDP(robot_IDS = UDP_com_args.robot_IDS,
 def transmission_UDP(mode = UDP_transmission_args.mode,
                      tr_data = UDP_transmission_args.tr_data):
     
+    """
+    envia datos
+    """
+    
     global UDP_IPS
     global UDP_payload
     global UDP_payload_PC
@@ -1260,7 +1264,9 @@ def transmission_UDP(mode = UDP_transmission_args.mode,
     global sock
     
     if str(mode) == 'DIRECT':
-        
+        """
+        Desde la compu a los robots 
+        """
         size_in = len(UDP_payload)
         
         for k in range(size_in):
@@ -1286,6 +1292,10 @@ def transmission_UDP(mode = UDP_transmission_args.mode,
      
     elif str(mode) == 'MASTER':
         
+        """
+        enviar a otras pcs para control o enseñar
+        """
+        
         size_in = len(UDP_payload_PC)
         
         for k in range(size_in):
@@ -1299,6 +1309,10 @@ def transmission_UDP(mode = UDP_transmission_args.mode,
                 pass
     
     elif str(mode) == 'LISTENER':
+        
+        """
+        ya hay un master (falta terminar)
+        """
         
         size_in = len(UDP_payload)
         
