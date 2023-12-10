@@ -1,1 +1,3 @@
 __pycache__/
+dist
+/src/pycore_robot.egg-info/*
