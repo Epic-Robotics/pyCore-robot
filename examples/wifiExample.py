@@ -1,9 +1,8 @@
 import json
-import importlib
-foobar = importlib.import_module("pycore-robot")
+import pycore_robot
 
 # Create a UDP connection object
-udp_connection = foobar.wifiConection.UDPConnection('192.168.1.102', 44444)
+udp_connection = pycore_robot.wifiConection.UDPConnection('192.168.1.102', 44444)
 
 while True:
     # Receive a message
