@@ -8,18 +8,24 @@ robot_IDS, size_in = ucorobot.initialize()
 #--- Video capture
 cap = cv2.VideoCapture(cam, API_cam)
 
-#-- Pixel based goal position
-robot_GOAL = [500, 500, 30]
+#-- Pixel based goal position (Based on robot's number)
+robot_GOAL = [[500, 500, 30],
+              [600, 600, 40],
+              [500, 500, 30],
+              [600, 600, 40],
+              [500, 500, 30]]
 
 #-- Parameters for controller
-r = 3       # Radius of wheel
-l = 10      # Distance between wheels
-ks = 10     # Attraction force constant
-d0 = 20     # Minimal attraction field distance
-kw = 40     # Angular constant
-U_max = 15  # Maximun robot velocity
+r = 3               # Radius of wheel (pixels)
+l = 10              # Distance between wheels (pixels)
+ks = 10             # Attraction force constant
+d0 = 20             # Minimal attraction field distance
+kw = 40             # Angular constant
+U_max = 15          # Maximun robot velocity
+kr = 500000000      # Repulsion force constant
+L0 = 50             # Minimal repulsion field distance
 
-ctr_params = [r, l, ks, d0, kw, U_max]
+ctr_params = [r, l, ks, d0, kw, U_max, kr, L0]
 
 while True:
 
@@ -27,13 +33,11 @@ while True:
     robot_POSE = ucorobot.get_pose(frame, 0, mtx, dist, robot_IDS, size_in)
     ucorobot.draw_robots(robot_POSE, robot_IDS, 1)
 
-    print(robot_POSE)
-
-    ang_vel = ucorobot.trdiff_control_single(robot_POSE, robot_IDS, robot_GOAL, 'MIMC-VADOC', ctr_params)
+    ang_vel = ucorobot.trdiff_control_multiple(robot_POSE, robot_IDS, robot_GOAL, 'MIMC-VADOC', ctr_params)
     '''
-        trdiff_control_single() --> Initialize the single control process.
+        trdiff_control_multiple() --> Initialize the multiple control process.
         Available for differential type robots.
-        Only available for one single unit.
+        Only available for multiple units.
         
         Parameters
         ----------

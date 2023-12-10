@@ -8,22 +8,17 @@ robot_IDS, size_in = ucorobot.initialize()
 #--- Video capture
 cap = cv2.VideoCapture(cam, API_cam)
 
-#-- Resolution set
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-
 while True:
 
     ret, frame = cap.read()
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    robot_POSE = ucorobot.get_pose(gray, 0, mtx, dist, robot_IDS, size_in)
+    robot_POSE = ucorobot.get_pose(frame, 0, mtx, dist, robot_IDS, size_in)
     '''
-        Initialize the POSE calculation process.
+        get_pose() --> Initialize the POSE calculation process.
         
         Parameters
         ----------
         GRAY : OpenCV image
-            OpenCV gray image.
+            OpenCV image.
         MODE : int
             Pose parameters mode.
             0 --> Pixel based pose.
@@ -38,10 +33,3 @@ while True:
             Initial number of units
     '''
     print(robot_POSE)
-
-
-    key = cv2.waitKey(1) & 0xFF
-    if key == ord('q'):
-        cap.release()
-        cv2.destroyAllWindows()
-        break

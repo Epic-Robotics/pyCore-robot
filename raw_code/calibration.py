@@ -2,14 +2,14 @@ import ucorobot
 
 ucorobot.calibration(0, 0.05, "DICT_ARUCO_ORIGINAL", 9, 6, 0, None, 1280, 720)
 """
-    Initialize the calibration process based on ArUco Markers.
+    calibration() --> Initialize the calibration process based on ArUco Markers.
     The calibration process uses the chessboard method.
     This function can use existing images or get new ones.
     
     Parameters
     ----------
     MODE : int
-        Calibration mode. 0 --> Get new calibration images. 1 --> Use existing files
+        Calibration mode. 1 --> Get new calibration images. 0 --> Use existing files
     MARKER_SIZE : float
         Length of one edge (in meters)
     DCT : str
