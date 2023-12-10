@@ -1,0 +1,56 @@
+//recepcion python 
+
+{
+    "id": 1 ,
+
+    "imu": {
+        "accelX": 12.4,
+        "accelY": 12.5,
+        "accelZ": 45.4,
+        "linearX": 89,
+        "linearY": 656,
+        "linearZ": 12.4
+    },
+    
+    "compass": {
+        "Hx": 45, 
+        "Hy": 323,
+        "Hz": 5454
+    },
+
+    "odometry":{
+        "encLeft": 454,
+        "encRight": 32.1,
+
+        // opcional
+        "pulseLeft": 4545,
+        "pulseRight": 3232
+    },
+
+    //sensores extras
+
+    "externalData": [12,45,45]
+
+}
+// hacer embebido conteo de pulsos Enc 
+
+// envio a robots
+{
+    // para los robots 
+    "setpoint": {
+        "rvel": 300.4, //rad/sec
+        "lvel": 100.9, //rad/sec
+    },
+    
+    "leds":{
+        "led1": 123,
+        "led2": 244
+    },
+
+    "pwm": {
+        "act1": 1234,
+        "act2": 1234,
+        "act3": 4545,
+        "act4": 333
+    }
+}
