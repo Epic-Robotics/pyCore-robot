@@ -23,11 +23,12 @@ class UDPConnection:
             ip_address = subprocess.check_output(['hostname', '-I']).decode('utf-8').split(' ')[0]  # Get the WLAN IP address using the 'hostname -I' command
         except subprocess.CalledProcessError:
             print('Failed to retrieve WLAN IP address. Using default IP address.')
+            raise Exception("Failed Connetion")
 
         print(f'MASTER IP address: {ip_address}')
         self.sock.bind((ip_address, self.port))  # Bind the socket to the retrieved WLAN IP and port
  
-    def send_message(self, message):
+    def sendMessage(self, message):
         """
         Send a JSON message to the remote host in byte format.
 
@@ -37,15 +38,27 @@ class UDPConnection:
         json_message = json.dumps(message)
         self.sock.sendto(json_message.encode('utf-8'), (self.ip_address, self.port))
 
-    def receive_message(self):
+    def receiveMessage(self):
         """
         Receive a JSON message from the remote host.
 
         Returns:
             (dict, tuple): The message and the sender's address.
         """
-        data, addr = self.sock.recvfrom(self.buffer_size)
-        json_data = json.loads(data.decode())
+        try:
+            data, addr = self.sock.recvfrom(self.buffer_size)
+            # Check if data is empty before decoding
+            if not data:
+                return None, addr
+            # Decode data
+            json_data = json.loads(data.decode())
+        except TypeError as e:
+            print(f"Error receiving message: {e}")
+            return None, addr
+        except json.decoder.JSONDecodeError as e:
+            print(f"Error decoding JSON message: {e}")
+            return None, addr
+        # Return the message and the sender's address
         return json_data, addr
 
     def __del__(self):
@@ -53,3 +66,4 @@ class UDPConnection:
         Destructor. Closes the socket.
         """
         self.sock.close()
+        
