@@ -66,3 +66,4 @@ class UDPConnection:
         Destructor. Closes the socket.
         """
         self.sock.close()
+        
