@@ -1,7 +1,4 @@
-from ._version import __version__
+__version__ = "0.0.1"
 
-__all__ = [
-    "__version__", 
-    "mobileRobot"
-]
-
+from .mobileRobot import *
+from .wifiConection import *
