@@ -3,13 +3,12 @@ import cv2
 import glob
 import os
 import time
-from args import get_calib_args
+from .args import get_calib_args as calib_args
 
 class ucoRobot:
     """
     A class for operations related to Aruco Markers.
     """
-    calib_args = get_calib_args()
     
     def __get_images(self, cam, API_cam, board_width, board_height, width, height):
     
@@ -41,7 +40,7 @@ class ucoRobot:
             cv2.imshow('Captured Image', frame)
             cv2.waitKey(WAIT_TIME)
         cv2.destroyAllWindows()
-        
+ 
     def calibrate(self, mode = calib_args.mode, 
                     marker_size = calib_args.marker_size, 
                     dct = calib_args.dct, 
@@ -107,4 +106,3 @@ class ucoRobot:
         
         print(" ")
         print("----- CALIBRATION SUCCESSFUL -----")
-        
