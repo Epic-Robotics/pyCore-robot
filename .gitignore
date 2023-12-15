@@ -1,4 +1,6 @@
 __pycache__/
+dist
+/src/pycore_robot.egg-info/*
 Calibration_Images
 calib_params.yaml
 robot_assign.yaml
