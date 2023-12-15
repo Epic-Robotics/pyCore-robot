@@ -1,9 +1,9 @@
 import cv2
-import ucorobot
+from pycore_robot import ucoRobot
 
 #--- Get calibration parameters
-mtx, dist, _, cam, API_cam, width, height, _ = ucorobot.read_calib()
-robot_IDS, size_in = ucorobot.initialize()
+mtx, dist, _, cam, API_cam, width, height, _ = ucoRobot.read_calib()
+robot_IDS, size_in = ucoRobot.initialize()
 
 #--- Video capture
 cap = cv2.VideoCapture(cam, API_cam)
@@ -11,7 +11,7 @@ cap = cv2.VideoCapture(cam, API_cam)
 while True:
 
     ret, frame = cap.read()
-    robot_POSE = ucorobot.get_pose(frame, 0, mtx, dist, robot_IDS, size_in)
+    robot_POSE = ucoRobot.get_pose(frame, 0, mtx, dist, robot_IDS, size_in)
     '''
         get_pose() --> Initialize the POSE calculation process.
         

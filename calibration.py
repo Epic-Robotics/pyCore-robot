@@ -1,6 +1,6 @@
-import ucorobot
+from pycore_robot import ucoRobot
 
-ucorobot.calibration(0, 0.05, "DICT_ARUCO_ORIGINAL", 9, 6, 0, None, 1280, 720)
+ucoRobot.calibration(0, 0.05, "DICT_ARUCO_ORIGINAL", 9, 6, 0, None, 1280, 720)
 """
     calibration() --> Initialize the calibration process based on ArUco Markers.
     The calibration process uses the chessboard method.

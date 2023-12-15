@@ -1,6 +1,6 @@
-import ucorobot
+from pycore_robot import ucoRobot
 
-ucorobot.assign()
+ucoRobot.assign()
 '''
     Assign all detected robot.
     

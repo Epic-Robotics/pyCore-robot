@@ -122,9 +122,9 @@ Robotics Library for Autonomous Systems) prerequisites.
 
 ### Installation
 
-1. Clone the repo
+1. Install Library
    ```sh
-   git clone https://github.com/Epic-Robotics/pyCore-robot
+   pip install -i https://test.pypi.org/simple/ pycore-robot
    ```
 2. Install prerequisites
 3. Check the examples
@@ -141,13 +141,13 @@ The UcoRobot library primarily employs image processing as a means to calculate 
 Initialize UcoRobot:
 
 ```sh
-import ucorobot
+import ucoRobot
 ```
 
 First, for UcoRobot initial calibration use:
 
 ```sh
-ucorobot.calibration()
+ucoRobot.calibration()
 ```
 
 Use the chessboard method to calibrate your camera.
@@ -161,7 +161,7 @@ Next, you need to generate ArUco markers for your robots. You can use this [page
 Now, you need to assign your functional markers:
 
 ```sh
-ucorobot.assign()
+ucoRobot.assign()
 ```
 And from here you can use all functions.
 

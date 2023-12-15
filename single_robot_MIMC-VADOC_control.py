@@ -1,9 +1,9 @@
 import cv2
-import ucorobot
+from pycore_robot import ucoRobot
 
 #--- Get calibration parameters
-mtx, dist, _, cam, API_cam, width, height, _ = ucorobot.read_calib()
-robot_IDS, size_in = ucorobot.initialize()
+mtx, dist, _, cam, API_cam, width, height, _ = ucoRobot.read_calib()
+robot_IDS, size_in = ucoRobot.initialize()
 
 #--- Video capture
 cap = cv2.VideoCapture(cam, API_cam)
@@ -24,12 +24,12 @@ ctr_params = [r, l, ks, d0, kw, U_max]
 while True:
 
     ret, frame = cap.read()
-    robot_POSE = ucorobot.get_pose(frame, 0, mtx, dist, robot_IDS, size_in)
-    ucorobot.draw_robots(robot_POSE, robot_IDS, 1)
+    robot_POSE = ucoRobot.get_pose(frame, 0, mtx, dist, robot_IDS, size_in)
+    ucoRobot.draw_robots(robot_POSE, robot_IDS, 1)
 
     print(robot_POSE)
 
-    ang_vel = ucorobot.trdiff_control_single(robot_POSE, robot_IDS, robot_GOAL, 'MIMC-VADOC', ctr_params)
+    ang_vel = ucoRobot.trdiff_control_single(robot_POSE, robot_IDS, robot_GOAL, 'MIMC-VADOC', ctr_params)
     '''
         trdiff_control_single() --> Initialize the single control process.
         Available for differential type robots.
