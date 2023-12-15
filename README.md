@@ -169,8 +169,6 @@ _Please refer to the [Examples](https://github.com/Epic-Robotics/pyCore-robot/)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- ROADMAP -->
 ## Roadmap
 
